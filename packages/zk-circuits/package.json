@@ -1,0 +1,10 @@
+{
+  "name": "@account-agg/zk-circuits",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "compile": "bash scripts/compile-all.sh",
+    "test": "bash scripts/test-all.sh",
+    "clean": "find . -name 'target' -type d -exec rm -rf {} + 2>/dev/null || true"
+  }
+}

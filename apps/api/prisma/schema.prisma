@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ConsentStatus {
+  PENDING
+  ACTIVE
+  PAUSED
+  REVOKED
+  EXPIRED
+  REJECTED
+}
+
+enum DataSessionStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  FAILED
+}
+
+enum KycProvider {
+  AADHAAR
+  DIGILOCKER
+  PAN
+  CKYC
+}
+
+enum KycStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  VERIFIED
+  FAILED
+  EXPIRED
+}
+
+enum CircuitType {
+  INCOME_RANGE
+  BALANCE_THRESHOLD
+  KYC_ATTESTATION
+  TRANSACTION_PATTERN
+  SELECTIVE_DISCLOSURE
+  MERKLE_MEMBERSHIP
+}
+
+enum ProofStatus {
+  GENERATING
+  VERIFIED
+  INVALID
+  EXPIRED
+}
+
+model User {
+  id           String    @id @default(cuid())
+  phone        String    @unique
+  email        String?   @unique
+  passwordHash String?
+  kycStatus    KycStatus @default(NOT_STARTED)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  consents     Consent[]
+  dataSessions DataSession[]
+  kycRecords   KycRecord[]
+  proofs       Proof[]
+  proofShares  ProofShare[]
+  auditLogs    AuditLog[]
+
+  @@index([phone])
+}
+
+model Consent {
+  id              String        @id @default(cuid())
+  userId          String
+  setuConsentId   String?       @unique
+  consentHandle   String?       @unique
+  vua             String        // Virtual User Address
+  status          ConsentStatus @default(PENDING)
+  fiTypes         String[]
+  purpose         String
+  purposeCode     String?
+  approvalUrl     String?
+  dataRangeFrom   DateTime
+  dataRangeTo     DateTime
+  consentStart    DateTime      @default(now())
+  consentExpiry   DateTime
+  fetchType       String        @default("ONETIME")
+  consentMode     String        @default("VIEW")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  dataSessions DataSession[]
+
+  @@index([userId])
+  @@index([setuConsentId])
+  @@index([status])
+}
+
+model DataSession {
+  id            String            @id @default(cuid())
+  consentId     String
+  userId        String
+  setuSessionId String?           @unique
+  status        DataSessionStatus @default(PENDING)
+  fiDataRef     String?           // Encrypted blob key in MinIO
+  dataHash      String?           // Poseidon hash commitment
+  fetchedAt     DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  consent Consent @relation(fields: [consentId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@index([consentId])
+  @@index([userId])
+  @@index([setuSessionId])
+}
+
+model KycRecord {
+  id              String      @id @default(cuid())
+  userId          String
+  provider        KycProvider
+  status          KycStatus   @default(NOT_STARTED)
+  providerLevel   Int         @default(0)
+  attestationHash String?     // Poseidon(name_hash, dob_hash, pan_hash, provider, timestamp)
+  nameHash        String?     // Poseidon hash of name
+  dobHash         String?     // Poseidon hash of DOB
+  panHash         String?     // Poseidon hash of PAN
+  verifiedAt      DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, provider])
+  @@index([userId])
+  @@index([attestationHash])
+}
+
+model Proof {
+  id           String      @id @default(cuid())
+  userId       String
+  circuitType  CircuitType
+  publicInputs Json        // Stored as JSONB
+  proofData    String      // Base64-encoded proof bytes
+  proofHash    String      @unique
+  status       ProofStatus @default(GENERATING)
+  verified     Boolean     @default(false)
+  verifiedAt   DateTime?
+  expiresAt    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  user       User         @relation(fields: [userId], references: [id])
+  proofShares ProofShare[]
+
+  @@index([userId])
+  @@index([circuitType])
+  @@index([proofHash])
+}
+
+model ProofShare {
+  id          String    @id @default(cuid())
+  userId      String
+  proofId     String
+  recipientId String    // Third-party identifier
+  purpose     String
+  shareToken  String    @unique // Unique token for retrieval
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  accessCount Int       @default(0)
+  maxAccess   Int       @default(10)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id])
+  proof Proof @relation(fields: [proofId], references: [id])
+
+  @@index([shareToken])
+  @@index([userId])
+  @@index([proofId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String
+  resourceId String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model OtpSession {
+  id        String   @id @default(cuid())
+  phone     String
+  otpHash   String
+  attempts  Int      @default(0)
+  verified  Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone])
+  @@index([expiresAt])
+}
