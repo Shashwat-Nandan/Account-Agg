@@ -33,7 +33,7 @@ export class ProofService {
       data: {
         userId,
         circuitType,
-        publicInputs,
+        publicInputs: publicInputs as any,
         proofData,
         proofHash,
         status: verified ? ProofStatus.VERIFIED : ProofStatus.INVALID,

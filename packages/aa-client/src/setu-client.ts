@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { createDetachedJws } from '@account-agg/shared';
+import { createDetachedJws } from '@account-agg/shared/dist/utils/jws';
 
 export interface SetuConfig {
   baseUrl: string;

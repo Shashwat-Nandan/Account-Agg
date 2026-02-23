@@ -1,4 +1,4 @@
-use std::hash::poseidon;
+use std::hash::pedersen_hash;
 
 fn main(
     fields: [Field; 5],                  // Private: all account fields
@@ -7,7 +7,7 @@ fn main(
     record_hash: pub Field               // Public: hash of all fields
 ) {
     // Verify record hash matches private fields
-    let computed_hash = poseidon::bn254::hash_5(fields);
+    let computed_hash = pedersen_hash(fields);
     assert(computed_hash == record_hash, "Record hash mismatch");
 
     // For each bit in mask, verify disclosed value matches private field
@@ -25,7 +25,7 @@ fn main(
 #[test]
 fn test_selective_disclosure() {
     let fields: [Field; 5] = [100, 200, 300, 400, 500];
-    let hash = poseidon::bn254::hash_5(fields);
+    let hash = pedersen_hash(fields);
 
     // Disclose fields 0 and 2 (mask = 0b00101 = 5)
     let disclosed: [Field; 5] = [100, 0, 300, 0, 0];

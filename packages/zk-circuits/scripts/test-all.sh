@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Ensure nargo is in PATH
+export PATH="$HOME/.nargo/bin:$PATH"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CIRCUITS_DIR="$(dirname "$SCRIPT_DIR")"
 

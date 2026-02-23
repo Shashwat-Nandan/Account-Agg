@@ -1,4 +1,4 @@
-use std::hash::poseidon;
+use std::hash::pedersen_hash;
 
 fn main(
     leaf: Field,                   // Private: user's leaf value
@@ -15,10 +15,10 @@ fn main(
         // If index bit is 0, current is left child; otherwise right
         if (idx & 1) == 0 {
             let pair: [Field; 2] = [current, sibling];
-            current = poseidon::bn254::hash_2(pair);
+            current = pedersen_hash(pair);
         } else {
             let pair: [Field; 2] = [sibling, current];
-            current = poseidon::bn254::hash_2(pair);
+            current = pedersen_hash(pair);
         }
         idx = idx >> 1;
     }
@@ -32,25 +32,24 @@ fn test_merkle_depth_1() {
     let leaf: Field = 42;
     let sibling: Field = 99;
     let pair: [Field; 2] = [leaf, sibling];
-    let root = poseidon::bn254::hash_2(pair);
+    let _root = pedersen_hash(pair);
 
     // Path: first element is sibling, rest are zeros (only 1 level used)
     let mut path: [Field; 20] = [0; 20];
     path[0] = sibling;
 
     // We need root to match after all 20 levels
-    // For a proper test, we'd need to compute through all levels
-    // This is a structural test
+    // Compute through all levels to get the actual root
     let mut current = leaf;
     let mut idx: u32 = 0;
     for i in 0..20 {
         let sib = path[i];
         if (idx & 1) == 0 {
             let p: [Field; 2] = [current, sib];
-            current = poseidon::bn254::hash_2(p);
+            current = pedersen_hash(p);
         } else {
             let p: [Field; 2] = [sib, current];
-            current = poseidon::bn254::hash_2(p);
+            current = pedersen_hash(p);
         }
         idx = idx >> 1;
     }

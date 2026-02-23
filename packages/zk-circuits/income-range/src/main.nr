@@ -1,4 +1,4 @@
-use std::hash::poseidon;
+use std::hash::pedersen_hash;
 
 fn main(
     monthly_credits: [u64; 12],          // Private: actual monthly income
@@ -12,7 +12,7 @@ fn main(
     for i in 0..12 {
         hash_inputs[i] = monthly_credits[i] as Field;
     }
-    let computed_hash = poseidon::bn254::hash_12(hash_inputs);
+    let computed_hash = pedersen_hash(hash_inputs);
     assert(computed_hash == expected_data_hash, "Data hash mismatch");
     assert(data_hash == expected_data_hash, "Data hash integrity check failed");
 
@@ -32,6 +32,6 @@ fn test_valid_income_range() {
     for i in 0..12 {
         hash_inputs[i] = credits[i] as Field;
     }
-    let hash = poseidon::bn254::hash_12(hash_inputs);
+    let hash = pedersen_hash(hash_inputs);
     main(credits, hash, 500000, 700000, hash);
 }

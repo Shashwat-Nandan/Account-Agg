@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { verifyDetachedJws } from '@account-agg/shared';
+import { verifyDetachedJws } from '@account-agg/shared/dist/utils/jws';
 import { readFileSync } from 'node:fs';
 
 @Injectable()

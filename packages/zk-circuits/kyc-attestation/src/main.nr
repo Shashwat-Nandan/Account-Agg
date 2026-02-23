@@ -1,4 +1,4 @@
-use std::hash::poseidon;
+use std::hash::pedersen_hash;
 
 fn main(
     name_hash: Field,              // Private: Poseidon hash of name
@@ -17,7 +17,7 @@ fn main(
         provider as Field,
         timestamp as Field,
     ];
-    let computed_attestation = poseidon::bn254::hash_5(hash_inputs);
+    let computed_attestation = pedersen_hash(hash_inputs);
 
     // Verify attestation matches
     assert(computed_attestation == attestation_hash, "Attestation hash mismatch");
@@ -35,7 +35,7 @@ fn test_aadhaar_kyc_attestation() {
     let timestamp: u64 = 1700000000;
 
     let hash_inputs: [Field; 5] = [name_hash, dob_hash, pan_hash, provider as Field, timestamp as Field];
-    let attestation = poseidon::bn254::hash_5(hash_inputs);
+    let attestation = pedersen_hash(hash_inputs);
 
     main(name_hash, dob_hash, pan_hash, provider, timestamp, attestation, 2);
 }

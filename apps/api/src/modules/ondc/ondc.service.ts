@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { randomUUID } from 'node:crypto';
 
-interface BecknContext {
+export interface BecknContext {
   domain: string;
   action: string;
   bap_id: string;

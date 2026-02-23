@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { MinioService } from './minio.service';
-import { encryptAES256GCM, decryptAES256GCM } from '@account-agg/shared';
+import { encryptAES256GCM, decryptAES256GCM } from '@account-agg/shared/dist/utils/encryption';
 import { createHash } from 'node:crypto';
 
 @Injectable()
