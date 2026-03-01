@@ -40,3 +40,5 @@ packages/zk-circuits/*/target/
 
 # Prisma
 apps/api/src/database/prisma/migrations/*.sql
+minio
+apps/api/tsconfig.tsbuildinfo
