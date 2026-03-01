@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { randomInt, createHash } from 'node:crypto';
+import { randomInt } from 'node:crypto';
+import { hashCommitment } from '../../common/hash.util';
 
 @Injectable()
 export class OtpService {
@@ -62,6 +63,6 @@ export class OtpService {
   }
 
   private hash(value: string): string {
-    return createHash('sha256').update(value).digest('hex');
+    return hashCommitment(value);
   }
 }
