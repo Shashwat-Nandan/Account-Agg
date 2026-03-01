@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CircuitType, ProofStatus } from '@prisma/client';
-import { createHash } from 'node:crypto';
+import { hashCommitment } from '../../common/hash.util';
 
 @Injectable()
 export class ProofService {
@@ -13,9 +13,7 @@ export class ProofService {
     publicInputs: Record<string, unknown>,
     proofData: string,
   ) {
-    const proofHash = createHash('sha256')
-      .update(proofData)
-      .digest('hex');
+    const proofHash = hashCommitment(proofData);
 
     // Check for duplicate proof
     const existing = await this.prisma.proof.findUnique({

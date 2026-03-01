@@ -2,20 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { randomUUID } from 'node:crypto';
-
-export interface BecknContext {
-  domain: string;
-  action: string;
-  bap_id: string;
-  bap_uri: string;
-  bpp_id?: string;
-  bpp_uri?: string;
-  transaction_id: string;
-  message_id: string;
-  timestamp: string;
-  country: string;
-  city: string;
-}
+import type { BecknContext } from '@account-agg/shared';
+import { OndcDomain, OndcAction } from '@account-agg/shared';
 
 @Injectable()
 export class OndcService {
@@ -34,7 +22,7 @@ export class OndcService {
    * Search for financial products (loans, insurance, MF) on ONDC network.
    */
   async searchProducts(category: string, params: Record<string, unknown>) {
-    const context = this.buildContext('search');
+    const context = this.buildContext(OndcAction.SEARCH);
 
     const searchPayload = {
       context,
@@ -103,7 +91,7 @@ export class OndcService {
       },
     });
 
-    const context = this.buildContext('init');
+    const context = this.buildContext(OndcAction.INIT);
 
     return {
       context,
@@ -151,9 +139,9 @@ export class OndcService {
     return { message: { ack: { status: 'ACK' } } };
   }
 
-  private buildContext(action: string): BecknContext {
+  private buildContext(action: OndcAction): BecknContext {
     return {
-      domain: 'ONDC:FIS12',
+      domain: OndcDomain.FINANCIAL_SERVICES,
       action,
       bap_id: this.bapId,
       bap_uri: this.bapUri,

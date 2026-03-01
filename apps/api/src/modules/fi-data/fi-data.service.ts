@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { MinioService } from './minio.service';
 import { encryptAES256GCM, decryptAES256GCM } from '@account-agg/shared/dist/utils/encryption';
-import { createHash } from 'node:crypto';
+import { hashCommitment } from '../../common/hash.util';
 
 @Injectable()
 export class FiDataService {
@@ -50,7 +50,7 @@ export class FiDataService {
     });
     if (!session) throw new NotFoundException('Data session not found');
 
-    // Compute data hash (Poseidon in production, SHA-256 placeholder)
+    // Compute data hash (Pedersen in production, SHA-256 placeholder)
     const dataHash = this.computeDataHash(rawFiData);
 
     // Encrypt and store in MinIO
@@ -120,10 +120,9 @@ export class FiDataService {
 
   /**
    * Compute data commitment hash.
-   * In production, this would use Poseidon hash for ZK compatibility.
-   * Using SHA-256 as placeholder until Poseidon library is integrated.
+   * In production, replace with Pedersen hash for ZK compatibility.
    */
   private computeDataHash(data: string): string {
-    return createHash('sha256').update(data).digest('hex');
+    return hashCommitment(data);
   }
 }

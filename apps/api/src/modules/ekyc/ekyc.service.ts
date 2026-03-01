@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { KycProvider, KycStatus } from '@prisma/client';
-import { createHash } from 'node:crypto';
+import { hashCommitment } from '../../common/hash.util';
 
 interface KycFieldHashes {
   nameHash: string;
@@ -40,7 +40,7 @@ export class EkycService {
       address: { state: 'Karnataka', pincode: '560001' },
     };
 
-    // Compute Poseidon hashes (using SHA-256 placeholder)
+    // Compute Pedersen hashes (using SHA-256 placeholder)
     const fieldHashes = this.computeFieldHashes(
       verifiedData.name,
       verifiedData.dob,
@@ -195,8 +195,8 @@ export class EkycService {
   }
 
   /**
-   * Compute field hashes using Poseidon (SHA-256 placeholder).
-   * In production: use circomlibjs Poseidon for ZK compatibility.
+   * Compute field hashes using Pedersen (SHA-256 placeholder).
+   * In production: use Pedersen hash for ZK compatibility.
    */
   private computeFieldHashes(
     name: string,
@@ -204,9 +204,9 @@ export class EkycService {
     pan: string,
   ): KycFieldHashes {
     return {
-      nameHash: this.poseidonPlaceholder(name),
-      dobHash: this.poseidonPlaceholder(dob),
-      panHash: this.poseidonPlaceholder(pan),
+      nameHash: this.pedersenPlaceholder(name),
+      dobHash: this.pedersenPlaceholder(dob),
+      panHash: this.pedersenPlaceholder(pan),
     };
   }
 
@@ -216,14 +216,10 @@ export class EkycService {
     timestamp: number,
   ): string {
     const input = `${fields.nameHash}:${fields.dobHash}:${fields.panHash}:${provider}:${timestamp}`;
-    return this.poseidonPlaceholder(input);
+    return this.pedersenPlaceholder(input);
   }
 
-  /**
-   * Placeholder for Poseidon hash. In production, replace with
-   * circomlibjs Poseidon to match Noir circuit hashing.
-   */
-  private poseidonPlaceholder(input: string): string {
-    return createHash('sha256').update(input).digest('hex');
+  private pedersenPlaceholder(input: string): string {
+    return hashCommitment(input);
   }
 }
