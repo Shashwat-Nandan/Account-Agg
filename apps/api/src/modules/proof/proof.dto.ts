@@ -1,9 +1,9 @@
-import { IsString, IsObject, IsNotEmpty } from 'class-validator';
+import { IsString, IsObject, IsNotEmpty, IsEnum } from 'class-validator';
+import { CircuitType } from '@prisma/client';
 
 export class SubmitProofDto {
-  @IsString()
-  @IsNotEmpty()
-  circuitType: string;
+  @IsEnum(CircuitType)
+  circuitType: CircuitType;
 
   @IsObject()
   publicInputs: Record<string, unknown>;
@@ -14,9 +14,8 @@ export class SubmitProofDto {
 }
 
 export class VerifyProofDto {
-  @IsString()
-  @IsNotEmpty()
-  circuitType: string;
+  @IsEnum(CircuitType)
+  circuitType: CircuitType;
 
   @IsString()
   @IsNotEmpty()

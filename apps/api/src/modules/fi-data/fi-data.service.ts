@@ -1,12 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { MinioService } from './minio.service';
+import { DataSessionStatus } from '@prisma/client';
 import { encryptAES256GCM, decryptAES256GCM } from '@account-agg/shared/dist/utils/encryption';
 import { hashCommitment } from '../../common/hash.util';
+import { randomBytes } from 'node:crypto';
 
 @Injectable()
 export class FiDataService {
+  private readonly logger = new Logger(FiDataService.name);
   private readonly encryptionKey: string;
 
   constructor(
@@ -14,9 +17,20 @@ export class FiDataService {
     private readonly config: ConfigService,
     private readonly minio: MinioService,
   ) {
-    this.encryptionKey =
-      this.config.get<string>('ENCRYPTION_MASTER_KEY') ||
-      'a'.repeat(64); // 32 bytes hex - dev fallback
+    const configuredKey = this.config.get<string>('ENCRYPTION_MASTER_KEY');
+    if (configuredKey) {
+      this.encryptionKey = configuredKey;
+    } else if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'ENCRYPTION_MASTER_KEY must be set in production. ' +
+        'Provide a 64-character hex string (32 bytes).',
+      );
+    } else {
+      this.encryptionKey = randomBytes(32).toString('hex');
+      this.logger.warn(
+        'ENCRYPTION_MASTER_KEY not set — using random dev key. Data will not survive restarts.',
+      );
+    }
   }
 
   async createDataSession(consentId: string, userId: string) {
@@ -111,10 +125,10 @@ export class FiDataService {
     });
   }
 
-  async handleFINotification(sessionId: string, status: string) {
+  async handleFINotification(sessionId: string, status: DataSessionStatus) {
     return this.prisma.dataSession.updateMany({
       where: { setuSessionId: sessionId },
-      data: { status: status as any },
+      data: { status },
     });
   }
 

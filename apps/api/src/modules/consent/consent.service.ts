@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import { ConsentStatus } from '@prisma/client';
+import { DEFAULT_CONSENT_DURATION_DAYS } from '../../common/constants';
 
 export interface CreateConsentParams {
   userId: string;
@@ -24,7 +25,7 @@ export class ConsentService {
   ) {}
 
   async create(params: CreateConsentParams) {
-    const durationDays = params.consentDurationDays || 365;
+    const durationDays = params.consentDurationDays || DEFAULT_CONSENT_DURATION_DAYS;
     const consentExpiry = new Date();
     consentExpiry.setDate(consentExpiry.getDate() + durationDays);
 

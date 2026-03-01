@@ -6,6 +6,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { randomBytes } from 'node:crypto';
+import {
+  DEFAULT_SHARE_EXPIRY_HOURS,
+  DEFAULT_MAX_SHARE_ACCESS,
+} from '../../common/constants';
 
 @Injectable()
 export class SharingService {
@@ -16,8 +20,8 @@ export class SharingService {
     proofId: string,
     recipientId: string,
     purpose: string,
-    expiresInHours: number = 72,
-    maxAccess: number = 10,
+    expiresInHours: number = DEFAULT_SHARE_EXPIRY_HOURS,
+    maxAccess: number = DEFAULT_MAX_SHARE_ACCESS,
   ) {
     // Verify proof belongs to user and is verified
     const proof = await this.prisma.proof.findFirst({

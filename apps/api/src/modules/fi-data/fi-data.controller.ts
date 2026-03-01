@@ -10,6 +10,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FiDataService } from './fi-data.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwsVerificationGuard } from '../../common/guards/jws-verification.guard';
+import { CreateDataSessionDto, HandleFINotificationDto } from './fi-data.dto';
 
 @Controller('fi-data')
 export class FiDataController {
@@ -18,10 +19,10 @@ export class FiDataController {
   @UseGuards(AuthGuard('jwt'))
   @Post('sessions')
   createSession(
-    @Body('consentId') consentId: string,
+    @Body() dto: CreateDataSessionDto,
     @CurrentUser('id') userId: string,
   ) {
-    return this.fiDataService.createDataSession(consentId, userId);
+    return this.fiDataService.createDataSession(dto.consentId, userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -44,13 +45,10 @@ export class FiDataController {
    */
   @UseGuards(JwsVerificationGuard)
   @Post('webhooks/fi-notification')
-  handleFINotification(@Body() body: {
-    FIStatusNotification: {
-      sessionId: string;
-      sessionStatus: string;
-    };
-  }) {
-    const { sessionId, sessionStatus } = body.FIStatusNotification;
-    return this.fiDataService.handleFINotification(sessionId, sessionStatus);
+  handleFINotification(@Body() dto: HandleFINotificationDto) {
+    return this.fiDataService.handleFINotification(
+      dto.sessionId,
+      dto.status,
+    );
   }
 }

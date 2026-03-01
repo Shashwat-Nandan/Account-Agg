@@ -5,10 +5,13 @@ import {
   Body,
   Param,
   UseGuards,
+  ParseEnumPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { KycProvider } from '@prisma/client';
 import { EkycService } from './ekyc.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { VerifyAadhaarOtpDto, VerifyPanDto } from './ekyc.dto';
 
 @Controller('ekyc')
 export class EkycController {
@@ -31,12 +34,12 @@ export class EkycController {
   @Post('aadhaar/verify')
   verifyAadhaar(
     @CurrentUser('id') userId: string,
-    @Body() body: { transactionId: string; otp: string },
+    @Body() dto: VerifyAadhaarOtpDto,
   ) {
     return this.ekycService.verifyAadhaarOtp(
       userId,
-      body.transactionId,
-      body.otp,
+      dto.transactionId,
+      dto.otp,
     );
   }
 
@@ -45,9 +48,9 @@ export class EkycController {
   @Post('pan/verify')
   verifyPan(
     @CurrentUser('id') userId: string,
-    @Body() body: { pan: string; name: string },
+    @Body() dto: VerifyPanDto,
   ) {
-    return this.ekycService.initiatePanVerification(userId, body.pan, body.name);
+    return this.ekycService.initiatePanVerification(userId, dto.pan, dto.name);
   }
 
   // DigiLocker
@@ -62,8 +65,8 @@ export class EkycController {
   @Get('attestation/:provider')
   getAttestation(
     @CurrentUser('id') userId: string,
-    @Param('provider') provider: string,
+    @Param('provider', new ParseEnumPipe(KycProvider)) provider: KycProvider,
   ) {
-    return this.ekycService.getAttestationForProof(userId, provider as any);
+    return this.ekycService.getAttestationForProof(userId, provider);
   }
 }

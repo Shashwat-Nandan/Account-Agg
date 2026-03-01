@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { randomUUID } from 'node:crypto';
 import type { BecknContext } from '@account-agg/shared';
@@ -126,13 +127,13 @@ export class OndcService {
   /**
    * Handle callback from BPP (provider).
    */
-  async handleCallback(action: string, payload: unknown) {
+  async handleCallback(action: string, payload: Record<string, unknown>) {
     // Log callback for audit
     await this.prisma.auditLog.create({
       data: {
         action: `ondc_callback_${action}`,
         resource: 'OndcModule',
-        metadata: payload as any,
+        metadata: payload as Prisma.InputJsonValue,
       },
     });
 

@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { randomInt } from 'node:crypto';
 import { hashCommitment } from '../../common/hash.util';
+import {
+  OTP_EXPIRY_MS,
+  OTP_MAX_ATTEMPTS,
+} from '../../common/constants';
 
 @Injectable()
 export class OtpService {
-  private readonly OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly MAX_ATTEMPTS = 5;
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -24,7 +26,7 @@ export class OtpService {
       data: {
         phone,
         otpHash,
-        expiresAt: new Date(Date.now() + this.OTP_EXPIRY_MS),
+        expiresAt: new Date(Date.now() + OTP_EXPIRY_MS),
       },
     });
 
@@ -42,7 +44,7 @@ export class OtpService {
     });
 
     if (!session) return false;
-    if (session.attempts >= this.MAX_ATTEMPTS) return false;
+    if (session.attempts >= OTP_MAX_ATTEMPTS) return false;
 
     // Increment attempts
     await this.prisma.otpSession.update({

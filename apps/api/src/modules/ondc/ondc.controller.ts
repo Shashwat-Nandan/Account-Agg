@@ -7,6 +7,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { OndcService } from './ondc.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { SearchProductsDto, InitOrderDto } from './ondc.dto';
 
 @Controller('ondc')
 export class OndcController {
@@ -14,51 +15,47 @@ export class OndcController {
 
   @UseGuards(AuthGuard('jwt'))
   @Post('search')
-  search(@Body() body: { category: string; params?: Record<string, unknown> }) {
-    return this.ondcService.searchProducts(body.category, body.params || {});
+  search(@Body() dto: SearchProductsDto) {
+    return this.ondcService.searchProducts(dto.category, dto.params || {});
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Post('init')
   initOrder(
     @CurrentUser('id') userId: string,
-    @Body() body: {
-      productId: string;
-      providerId: string;
-      proofIds: string[];
-    },
+    @Body() dto: InitOrderDto,
   ) {
     return this.ondcService.initOrder(
-      body.productId,
-      body.providerId,
-      body.proofIds,
+      dto.productId,
+      dto.providerId,
+      dto.proofIds,
       userId,
     );
   }
 
   // Beckn callback endpoints
   @Post('on_search')
-  onSearch(@Body() payload: unknown) {
+  onSearch(@Body() payload: Record<string, unknown>) {
     return this.ondcService.handleCallback('on_search', payload);
   }
 
   @Post('on_select')
-  onSelect(@Body() payload: unknown) {
+  onSelect(@Body() payload: Record<string, unknown>) {
     return this.ondcService.handleCallback('on_select', payload);
   }
 
   @Post('on_init')
-  onInit(@Body() payload: unknown) {
+  onInit(@Body() payload: Record<string, unknown>) {
     return this.ondcService.handleCallback('on_init', payload);
   }
 
   @Post('on_confirm')
-  onConfirm(@Body() payload: unknown) {
+  onConfirm(@Body() payload: Record<string, unknown>) {
     return this.ondcService.handleCallback('on_confirm', payload);
   }
 
   @Post('on_status')
-  onStatus(@Body() payload: unknown) {
+  onStatus(@Body() payload: Record<string, unknown>) {
     return this.ondcService.handleCallback('on_status', payload);
   }
 }

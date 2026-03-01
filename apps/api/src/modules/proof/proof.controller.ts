@@ -7,6 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle } from '@nestjs/throttler';
 import { ProofService } from './proof.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { SubmitProofDto, VerifyProofDto } from './proof.dto';
@@ -23,7 +24,7 @@ export class ProofController {
   ) {
     return this.proofService.submitProof(
       userId,
-      dto.circuitType as any,
+      dto.circuitType,
       dto.publicInputs,
       dto.proofData,
     );
@@ -44,6 +45,7 @@ export class ProofController {
   /**
    * Public endpoint — anyone can verify a proof without authentication.
    */
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
   @Post('verify')
   verify(@Body() dto: VerifyProofDto) {
     return this.proofService.verifyPublic(

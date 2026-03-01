@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
-import { CircuitType, ProofStatus } from '@prisma/client';
+import { CircuitType, Prisma, ProofStatus } from '@prisma/client';
 import { hashCommitment } from '../../common/hash.util';
+import { PROOF_EXPIRY_DAYS } from '../../common/constants';
 
 @Injectable()
 export class ProofService {
@@ -31,13 +32,13 @@ export class ProofService {
       data: {
         userId,
         circuitType,
-        publicInputs: publicInputs as any,
+        publicInputs: publicInputs as Prisma.InputJsonValue,
         proofData,
         proofHash,
         status: verified ? ProofStatus.VERIFIED : ProofStatus.INVALID,
         verified,
         verifiedAt: verified ? new Date() : undefined,
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+        expiresAt: new Date(Date.now() + PROOF_EXPIRY_DAYS * 24 * 60 * 60 * 1000),
       },
     });
 
@@ -79,12 +80,12 @@ export class ProofService {
    * Public verification endpoint — anyone can verify a proof.
    */
   async verifyPublic(
-    circuitType: string,
+    circuitType: CircuitType,
     proofData: string,
     publicInputs: Record<string, unknown>,
   ) {
     const verified = await this.verifyProofServerSide(
-      circuitType as CircuitType,
+      circuitType,
       proofData,
       publicInputs,
     );
